@@ -3,6 +3,16 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+B_tree/objects
+B_tree/objects/*
+
+B_tree/nodes
+B_tree/nodes/*
+
+B_tree/main
+B_tree/test
+B_tree/benchmark
+
 # User-specific files
 *.rsuser
 *.suo
