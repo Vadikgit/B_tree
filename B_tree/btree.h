@@ -19,15 +19,41 @@
 #include <functional>
 
 /////////////////////////////////////////////////////////////////
+class BTProcessable
+{
+public:
+	virtual void fromBytes(const std::vector<uint8_t> &ibuf, size_t firstBytePos);
+	virtual void toBytes(std::vector<uint8_t> &obuf, size_t firstBytePos);
+	virtual bool less(const BTProcessable &w2) const;
+	virtual size_t sizeInBytes();
 
-template <class T>
+	BTProcessable() = default;
+	BTProcessable(BTProcessable &&other) = default;
+	BTProcessable(const BTProcessable &other) = default;
+	virtual ~BTProcessable() {};
+
+	virtual BTProcessable *createNew();
+
+	virtual BTProcessable &operator=(const BTProcessable &other);
+	virtual BTProcessable &operator=(BTProcessable &&other);
+};
+
+bool operator<(const BTProcessable &w1, const BTProcessable &w2);
+bool operator==(const BTProcessable &w1, const BTProcessable &w2);
+bool operator<=(const BTProcessable &w1, const BTProcessable &w2);
+
 class Node
 {
 public:
-	Node(uint16_t numOfObjectsInNode, uint32_t levelMarker) : _levelMarker{levelMarker}, _id{0}, isLeaf{false}, _numOfCurrentStoredObjects{0}
+	Node(BTProcessable *initPtr, uint16_t numOfObjectsInNode, uint32_t levelMarker) : _levelMarker{levelMarker}, _id{0}, isLeaf{false}, _numOfCurrentStoredObjects{0}
 	{
 		childrenNodesIds.assign(numOfObjectsInNode + 1, 0);
-		nodesVals.assign(numOfObjectsInNode, T());
+		nodesValPtrs.assign(numOfObjectsInNode, nullptr);
+
+		for (size_t i = 0; i < numOfObjectsInNode; i++)
+		{
+			nodesValPtrs[i] = initPtr->createNew();
+		}
 	}
 
 	uint32_t _id;
@@ -36,7 +62,7 @@ public:
 	uint32_t _levelMarker;
 
 	std::vector<uint32_t> childrenNodesIds;
-	std::vector<T> nodesVals;
+	std::vector<BTProcessable *> nodesValPtrs;
 
 	// in memory:									  - id - | - is leaf - | - num OfCurrent Stored Objects - | - level marker - | - children Node's Ids - | - nodes values -
 	// in disk: filename = <id>.btrnd; filecontent =	       - is leaf - | - num OfCurrent Stored Objects - | - level marker - | - children Node's Ids - | - nodes values -
@@ -52,32 +78,29 @@ struct levelMarkersTreeNode
 
 /////////////////////////////////////////////////////////////////
 
-template <class T>
 class B_Tree;
 
-template <class T>
 class NodeCache
 {
 public:
 	size_t _maxNumOfPages;
-	std::unordered_map<uint32_t, Node<T>> _buffer;
+	std::unordered_map<uint32_t, Node> _buffer;
 	std::set<levelMarkersTreeNode, std::function<bool(const levelMarkersTreeNode &, const levelMarkersTreeNode &)>> _levelMarkersTree;
-	B_Tree<T> *_ptrToTree;
+	B_Tree *_ptrToTree;
 
-	NodeCache(B_Tree<T> *ptrToTree, size_t maxNumOfPages);
+	NodeCache(B_Tree *ptrToTree, size_t maxNumOfPages);
 
-	bool processPretendentToCache(Node<T> &node, bool getSave);
-	void getNode(uint32_t id, Node<T> &dst);
-	void saveNode(Node<T> &src);
-	void freeNode(Node<T> &node);
+	bool processPretendentToCache(Node &node, bool getSave);
+	void getNode(uint32_t id, Node &dst);
+	void saveNode(Node &src);
+	void freeNode(Node &node);
 
-	void writeNodeToDisk(Node<T> &src);
-	void readNodeFromDisk(uint32_t id, Node<T> &dst);
+	void writeNodeToDisk(Node &src);
+	void readNodeFromDisk(uint32_t id, Node &dst);
 };
 
 /////////////////////////////////////////////////////////////////
 
-template <class T>
 class B_Tree
 {
 public:
@@ -96,28 +119,29 @@ public:
 	int64_t _fileSizeInBytes;
 	std::fstream nodesFile;
 
-	NodeCache<T> _cache;
-	Node<T> _root;
+	NodeCache _cache;
+	Node _root;
+	BTProcessable *_initPtr;
 
-	B_Tree(bool recover = false, bool keepOnDiskAfterDestruction = false, std::string _pathToNodes = "", size_t diskPageSizeInBytes = 4096, size_t maxNumOfPagesInCache = 4);
+	B_Tree(BTProcessable *initPtr, size_t objectSizeInBytes, bool recover = false, bool keepOnDiskAfterDestruction = false, std::string _pathToNodes = "", size_t diskPageSizeInBytes = 4096, size_t maxNumOfPagesInCache = 4);
 	~B_Tree();
 
-	void getNode(uint32_t id, Node<T> &dst);
-	void saveNode(Node<T> &src);
-	void initNode(Node<T> &node)
+	void getNode(uint32_t id, Node &dst);
+	void saveNode(Node &src);
+	void initNode(Node &node)
 	{
 		node._id = largestExistingId + 1;
 		largestExistingId += 1;
 	}
-	void freeNode(Node<T> &node);
+	void freeNode(Node &node);
 	void makeRootUpper();
-	void makeRootLower(Node<T> &newRoot);
+	void makeRootLower(Node &newRoot);
 	void createTree();
-	void search(Node<T> &root, T &val, Node<T> &dst_node, uint16_t &indexWhereValueFound);
-	void splitChild(Node<T> &node, uint16_t index);
-	void insertKey(T &val);
-	void insertIntoNonFull(Node<T> &node, T &val);
-	void deleteKey(Node<T> &root, T &val);
+	void search(Node &root, BTProcessable &val, Node &dst_node, uint16_t &indexWhereValueFound);
+	void splitChild(Node &node, uint16_t index);
+	void insertKey(BTProcessable &val);
+	void insertIntoNonFull(Node &node, BTProcessable &val);
+	void deleteKey(Node &root, BTProcessable &val);
 };
 
 #endif
