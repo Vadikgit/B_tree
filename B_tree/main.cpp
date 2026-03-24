@@ -110,8 +110,8 @@ int main()
 	uint16_t index = 0;
 	tree.search(tree._root, searchVal, findNode, index);
 
-	std::cout << index << " " << findNode.nodesValPtrs[index - 1] << " " << &tp1 << std::endl;
-	std::cout << " " << (*dynamic_cast<point *>(findNode.nodesValPtrs[index - 1])).x << " " << (*dynamic_cast<point *>(findNode.nodesValPtrs[index - 1])).y << std::endl;
+	// std::cout << index << " " << findNode.nodesValPtrs[index - 1] << " " << &tp1 << std::endl;
+	// std::cout << " " << (*dynamic_cast<point *>(findNode.nodesValPtrs[index - 1])).x << " " << (*dynamic_cast<point *>(findNode.nodesValPtrs[index - 1])).y << std::endl;
 
 	return 0;
 }

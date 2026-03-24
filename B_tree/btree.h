@@ -48,12 +48,56 @@ public:
 	Node(BTProcessable *initPtr, uint16_t numOfObjectsInNode, uint32_t levelMarker) : _levelMarker{levelMarker}, _id{0}, isLeaf{false}, _numOfCurrentStoredObjects{0}
 	{
 		childrenNodesIds.assign(numOfObjectsInNode + 1, 0);
-		nodesValPtrs.assign(numOfObjectsInNode, nullptr);
 
 		for (size_t i = 0; i < numOfObjectsInNode; i++)
 		{
-			nodesValPtrs[i] = initPtr->createNew();
+			nodesValPtrs.push_back(std::unique_ptr<BTProcessable>{initPtr->createNew()});
 		}
+	}
+
+	Node(const Node &other) : _id{other._id}, isLeaf{other.isLeaf}, _numOfCurrentStoredObjects{other._numOfCurrentStoredObjects}, _levelMarker{other._levelMarker}, childrenNodesIds{other.childrenNodesIds}
+	{
+		for (size_t i = 0; i < other.nodesValPtrs.size(); i++)
+		{
+			nodesValPtrs.push_back(std::unique_ptr<BTProcessable>{other.nodesValPtrs[i]->createNew()});
+			*nodesValPtrs[i] = *other.nodesValPtrs[i];
+		}
+	}
+
+	Node &operator=(const Node &other)
+	{
+		if (&other != this)
+		{
+			_id = other._id;
+			isLeaf = other.isLeaf;
+			_numOfCurrentStoredObjects = other._numOfCurrentStoredObjects;
+			_levelMarker = other._levelMarker;
+			childrenNodesIds = other.childrenNodesIds;
+
+			for (size_t i = 0; i < other.nodesValPtrs.size(); i++)
+			{
+				nodesValPtrs[i].reset(other.nodesValPtrs[i]->createNew());
+				*nodesValPtrs[i] = *other.nodesValPtrs[i];
+			}
+		}
+
+		return *this;
+	}
+
+	Node &operator=(Node &&other)
+	{
+		_id = other._id;
+		isLeaf = other.isLeaf;
+		_numOfCurrentStoredObjects = other._numOfCurrentStoredObjects;
+		_levelMarker = other._levelMarker;
+		childrenNodesIds = std::move(other.childrenNodesIds);
+		nodesValPtrs = std::move(other.nodesValPtrs);
+
+		return *this;
+	}
+
+	Node(Node &&other) : _id{other._id}, isLeaf{other.isLeaf}, _numOfCurrentStoredObjects{other._numOfCurrentStoredObjects}, _levelMarker{other._levelMarker}, childrenNodesIds{std::move(other.childrenNodesIds)}, nodesValPtrs{std::move(other.nodesValPtrs)}
+	{
 	}
 
 	uint32_t _id;
@@ -62,7 +106,7 @@ public:
 	uint32_t _levelMarker;
 
 	std::vector<uint32_t> childrenNodesIds;
-	std::vector<BTProcessable *> nodesValPtrs;
+	std::vector<std::unique_ptr<BTProcessable>> nodesValPtrs;
 
 	// in memory:									  - id - | - is leaf - | - num OfCurrent Stored Objects - | - level marker - | - children Node's Ids - | - nodes values -
 	// in disk: filename = <id>.btrnd; filecontent =	       - is leaf - | - num OfCurrent Stored Objects - | - level marker - | - children Node's Ids - | - nodes values -

@@ -129,7 +129,7 @@ TEST(BtreeTests, TestNodesSavingGetting)
     nd1._numOfCurrentStoredObjects = nd1.nodesValPtrs.size();
 
     for (size_t i = 0; i < nd1.nodesValPtrs.size(); i++)
-        nd1.nodesValPtrs[i] = new uint64_type(i * 9487 + 234);
+        nd1.nodesValPtrs[i].reset(new uint64_type(i * 9487 + 234));
 
     for (size_t i = 0; i < nd1.childrenNodesIds.size(); i++)
         nd1.childrenNodesIds[i] = (i * 9875 + 34);
