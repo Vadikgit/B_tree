@@ -17,31 +17,9 @@
 #include <algorithm>
 #include <stdio.h>
 #include <functional>
+#include "btprocessable.h"
 
 /////////////////////////////////////////////////////////////////
-class BTProcessable
-{
-public:
-	virtual void fromBytes(const std::vector<uint8_t> &ibuf, size_t firstBytePos);
-	virtual void toBytes(std::vector<uint8_t> &obuf, size_t firstBytePos);
-	virtual bool less(const BTProcessable &w2) const;
-	virtual size_t sizeInBytes();
-
-	BTProcessable() = default;
-	BTProcessable(BTProcessable &&other) = default;
-	BTProcessable(const BTProcessable &other) = default;
-	virtual ~BTProcessable() {};
-
-	virtual BTProcessable *createNew();
-
-	virtual BTProcessable &operator=(const BTProcessable &other);
-	virtual BTProcessable &operator=(BTProcessable &&other);
-};
-
-bool operator<(const BTProcessable &w1, const BTProcessable &w2);
-bool operator==(const BTProcessable &w1, const BTProcessable &w2);
-bool operator<=(const BTProcessable &w1, const BTProcessable &w2);
-
 class Node
 {
 public:
@@ -148,6 +126,20 @@ public:
 class B_Tree
 {
 public:
+	B_Tree(BTProcessable *initPtr, size_t objectSizeInBytes, bool recover = false, bool keepOnDiskAfterDestruction = false, std::string _pathToNodes = "", size_t diskPageSizeInBytes = 4096, size_t maxNumOfPagesInCache = 4);
+	~B_Tree();
+
+	void insertKey(BTProcessable &val);
+	bool searchKey(BTProcessable &val);
+	void deleteKey(BTProcessable &val);
+
+	void initNode(Node &node)
+	{
+		node._id = largestExistingId + 1;
+		largestExistingId += 1;
+	}
+
+public:
 	std::chrono::microseconds _rdur;
 	std::chrono::microseconds _wdur;
 	uint64_t _rnum;
@@ -167,25 +159,17 @@ public:
 	Node _root;
 	BTProcessable *_initPtr;
 
-	B_Tree(BTProcessable *initPtr, size_t objectSizeInBytes, bool recover = false, bool keepOnDiskAfterDestruction = false, std::string _pathToNodes = "", size_t diskPageSizeInBytes = 4096, size_t maxNumOfPagesInCache = 4);
-	~B_Tree();
-
+private:
 	void getNode(uint32_t id, Node &dst);
 	void saveNode(Node &src);
-	void initNode(Node &node)
-	{
-		node._id = largestExistingId + 1;
-		largestExistingId += 1;
-	}
 	void freeNode(Node &node);
 	void makeRootUpper();
 	void makeRootLower(Node &newRoot);
 	void createTree();
-	void search(Node &root, BTProcessable &val, Node &dst_node, uint16_t &indexWhereValueFound);
+	void searchImpl(Node &root, BTProcessable &val, Node &dst_node, uint16_t &indexWhereValueFound);
+	void deleteKeyImpl(Node &root, BTProcessable &val);
 	void splitChild(Node &node, uint16_t index);
-	void insertKey(BTProcessable &val);
 	void insertIntoNonFull(Node &node, BTProcessable &val);
-	void deleteKey(Node &root, BTProcessable &val);
 };
 
 #endif

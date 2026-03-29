@@ -16,7 +16,10 @@ $(NODES) $(BENCHMARK) $(TEST) $(BUILD) $(OBJECTS):
 $(OBJECTS)/btree.o: btree.cpp btree.h | $(OBJECTS) $(NODES)
 	@$(CXX) $(CXXFLAGS) -g -fPIC -c btree.cpp -o $@
 
-$(BUILD)/libbtree.so: $(OBJECTS)/btree.o | $(BUILD)
+$(OBJECTS)/btprocessable.o: btprocessable.cpp btprocessable.h | $(OBJECTS) $(NODES)
+	@$(CXX) $(CXXFLAGS) -g -fPIC -c btprocessable.cpp -o $@
+
+$(BUILD)/libbtree.so: $(OBJECTS)/btree.o $(OBJECTS)/btprocessable.o | $(BUILD)
 	@$(CXX) $(CXXFLAGS) -shared  -fPIC -g $^ -o $@	
 
 $(OBJECTS)/main.o: main.cpp btree.h | $(OBJECTS)

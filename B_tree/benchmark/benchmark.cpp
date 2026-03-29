@@ -15,15 +15,15 @@ struct uint64_type : public BTProcessable
 
     uint64_type() : BTProcessable() {};
     uint64_type(uint64_t v) : val{v}, BTProcessable() {};
-    uint64_type(const uint64_type &other) : val{other.val}, BTProcessable(other) {};
-    uint64_type(uint64_type &&other) : val{other.val}, BTProcessable(other) {};
+    // uint64_type(const uint64_type &other) : val{other.val}, BTProcessable(other) {};
+    // uint64_type(uint64_type &&other) : val{other.val}, BTProcessable(other) {};
 
-    virtual uint64_type &operator=(const uint64_type &other);
-    virtual uint64_type &operator=(uint64_type &&other);
+    // virtual uint64_type &operator=(const uint64_type &other);
+    // virtual uint64_type &operator=(uint64_type &&other);
 
     virtual uint64_type &operator=(const BTProcessable &other) override;
     virtual uint64_type &operator=(BTProcessable &&other) override;
-    virtual ~uint64_type() {};
+    // virtual ~uint64_type() {};
 };
 
 void uint64_type::fromBytes(const std::vector<uint8_t> &ibuf, size_t firstBytePos)
@@ -51,7 +51,7 @@ uint64_type *uint64_type::createNew()
     return new uint64_type();
 }
 
-uint64_type &uint64_type::operator=(const uint64_type &other)
+/*uint64_type &uint64_type::operator=(const uint64_type &other)
 {
     if (this != &other)
     {
@@ -66,7 +66,7 @@ uint64_type &uint64_type::operator=(uint64_type &&other)
     val = other.val;
 
     return *this;
-}
+}*/
 
 uint64_type &uint64_type::operator=(const BTProcessable &other)
 {
@@ -140,8 +140,7 @@ void SearchOfValues(B_Tree &btr, size_t numOfValuesToProcess, size_t numOfValues
             uint64_type temp{val};
             Node findNode(&initobj, btr.maxNumOfObjectsInNode, 0);
 
-            uint16_t index = 0;
-            btr.search(btr._root, temp, findNode, index);
+            btr.searchKey(temp);
         }
     }
 }
@@ -161,7 +160,7 @@ void DeletionOfValues(B_Tree &btr, size_t numOfValuesToProcess, size_t numOfValu
         for (auto val : vals)
         {
             uint64_type temp{val};
-            btr.deleteKey(btr._root, temp);
+            btr.deleteKey(temp);
         }
     }
 }

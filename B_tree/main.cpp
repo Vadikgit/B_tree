@@ -14,15 +14,15 @@ struct point : public BTProcessable
 
 	point() : BTProcessable() {};
 	point(uint64_t xx, uint64_t yy) : x{xx}, y{yy}, BTProcessable() {};
-	point(const point &other) : x{other.x}, y{other.y}, BTProcessable(other) {};
-	point(point &&other) : x{other.x}, y{other.y}, BTProcessable(other) {};
+	// point(const point &other) : x{other.x}, y{other.y}, BTProcessable(other) {};
+	// point(point &&other) : x{other.x}, y{other.y}, BTProcessable(other) {};
 
-	virtual point &operator=(const point &other);
-	virtual point &operator=(point &&other);
+	// virtual point &operator=(const point &other);
+	// virtual point &operator=(point &&other);
 
 	virtual point &operator=(const BTProcessable &other) override;
 	virtual point &operator=(BTProcessable &&other) override;
-	virtual ~point() {};
+	// virtual ~point() {};
 };
 
 void point::fromBytes(const std::vector<uint8_t> &ibuf, size_t firstBytePos)
@@ -57,7 +57,7 @@ point *point::createNew()
 	return new point();
 }
 
-point &point::operator=(const point &other)
+/*point &point::operator=(const point &other)
 {
 	if (this != &other)
 	{
@@ -74,7 +74,7 @@ point &point::operator=(point &&other)
 	y = other.y;
 
 	return *this;
-}
+}*/
 
 point &point::operator=(const BTProcessable &other)
 {
@@ -108,7 +108,7 @@ int main()
 	Node findNode(&tp1, tree.maxNumOfObjectsInNode, 0);
 
 	uint16_t index = 0;
-	tree.search(tree._root, searchVal, findNode, index);
+	tree.searchKey(searchVal);
 
 	// std::cout << index << " " << findNode.nodesValPtrs[index - 1] << " " << &tp1 << std::endl;
 	// std::cout << " " << (*dynamic_cast<point *>(findNode.nodesValPtrs[index - 1])).x << " " << (*dynamic_cast<point *>(findNode.nodesValPtrs[index - 1])).y << std::endl;

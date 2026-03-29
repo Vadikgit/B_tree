@@ -16,58 +16,6 @@
 #include <stdio.h>
 #include <functional>
 
-void BTProcessable::fromBytes(const std::vector<uint8_t> &obuf, size_t firstBytePos)
-{
-}
-void BTProcessable::toBytes(std::vector<uint8_t> &obuf, size_t firstBytePos)
-{
-}
-
-BTProcessable &BTProcessable::operator=(const BTProcessable &other)
-{
-	return *this;
-}
-
-BTProcessable &BTProcessable::operator=(BTProcessable &&other)
-{
-	return *this;
-}
-
-BTProcessable *BTProcessable::createNew()
-{
-	return new BTProcessable();
-}
-
-bool BTProcessable::less(const BTProcessable &w2) const
-{
-	return false;
-}
-
-size_t BTProcessable::sizeInBytes()
-{
-	return 0;
-}
-
-bool operator<(const BTProcessable &w1, const BTProcessable &w2)
-{
-	return w1.less(w2);
-}
-
-bool operator==(const BTProcessable &w1, const BTProcessable &w2)
-{
-	return (!(w1 < w2 || w2 < w1));
-}
-
-bool operator<=(const BTProcessable &w1, const BTProcessable &w2)
-{
-	return (w1 < w2 || w2 == w1);
-}
-
-std::function<bool(const std::unique_ptr<BTProcessable> &, const std::unique_ptr<BTProcessable> &)> BTProcessablePtrComp = [](const std::unique_ptr<BTProcessable> &el1, const std::unique_ptr<BTProcessable> &el2)
-{
-	return (*el1 < *el2);
-};
-
 /////////////////////////////////////////////////////////////////
 
 std::function<bool(const levelMarkersTreeNode &, const levelMarkersTreeNode &)> levelMarkersTreeNodeComp = [](const levelMarkersTreeNode &n1, const levelMarkersTreeNode &n2) -> bool
@@ -152,11 +100,6 @@ void NodeCache::readNodeFromDisk(uint32_t id, Node &dst)
 	dst._levelMarker = *((uint32_t *)&(nodeBytes[numOfPassedBytes])); // levelMarker
 	numOfPassedBytes += sizeof(uint32_t);
 
-	// for (size_t i = 0; i < dst.childrenNodesIds.size(); i++) // childrenNodesIds
-	//{
-	//	dst.childrenNodesIds[i] = *((uint32_t*)&(nodeBytes[numOfPassedBytes]));
-	//	numOfPassedBytes += sizeof(uint32_t);
-	// }
 	std::memcpy((void *)&(dst.childrenNodesIds[0]), (void *)&(nodeBytes[numOfPassedBytes]), dst.childrenNodesIds.size() * sizeof(uint32_t));
 	numOfPassedBytes += sizeof(uint32_t) * dst.childrenNodesIds.size();
 
@@ -166,9 +109,6 @@ void NodeCache::readNodeFromDisk(uint32_t id, Node &dst)
 		dst.nodesValPtrs[i]->fromBytes(nodeBytes, numOfPassedBytes);
 		numOfPassedBytes += dst.nodesValPtrs[i]->sizeInBytes();
 	}
-
-	// std::memcpy((void *)&(dst.nodesVals[0]), (void *)&(nodeBytes[numOfPassedBytes]), dst.nodesVals.size() * sizeof(dst.nodesVals[0]));
-	// numOfPassedBytes += sizeof(dst.nodesVals[0]) * dst.nodesVals.size();
 
 	_ptrToTree->_rdur += (std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1));
 	_ptrToTree->_rnum++;
@@ -180,7 +120,6 @@ void NodeCache::writeNodeToDisk(Node &src)
 
 	size_t numOfPassedBytes = 0;
 	std::vector<uint8_t> nodeBytes;
-	//	nodeBytes.assign((sizeof(bool) + sizeof(uint16_t) + sizeof(uint32_t) + sizeof(src.nodesVals[0]) * _ptrToTree->maxNumOfObjectsInNode + sizeof(src.childrenNodesIds[0]) * (_ptrToTree->maxNumOfObjectsInNode + 1)), 0);
 	nodeBytes.assign(_ptrToTree->_fileSizeInBytes, 0);
 
 	*((bool *)&(nodeBytes[numOfPassedBytes])) = src.isLeaf; // isLeaf
@@ -192,11 +131,6 @@ void NodeCache::writeNodeToDisk(Node &src)
 	*((uint32_t *)&(nodeBytes[numOfPassedBytes])) = src._levelMarker; // levelMarker
 	numOfPassedBytes += sizeof(uint32_t);
 
-	// for (size_t i = 0; i < src.childrenNodesIds.size(); i++) // childrenNodesIds
-	//{
-	//	*((uint32_t*)&(nodeBytes[numOfPassedBytes])) = src.childrenNodesIds[i];
-	//	numOfPassedBytes += sizeof(uint32_t);
-	// }
 	std::memcpy((void *)&(nodeBytes[numOfPassedBytes]), (void *)&(src.childrenNodesIds[0]), src.childrenNodesIds.size() * sizeof(uint32_t));
 	numOfPassedBytes += sizeof(uint32_t) * src.childrenNodesIds.size();
 
@@ -205,8 +139,6 @@ void NodeCache::writeNodeToDisk(Node &src)
 		src.nodesValPtrs[i]->toBytes(nodeBytes, numOfPassedBytes);
 		numOfPassedBytes += src.nodesValPtrs[i]->sizeInBytes();
 	}
-	// std::memcpy((void *)&(nodeBytes[numOfPassedBytes]), (void *)&(src.nodesVals[0]), src.nodesVals.size() * sizeof(src.nodesVals[0]));
-	// numOfPassedBytes += sizeof(T) * src.nodesVals.size();
 
 	////////////////////////////////
 
@@ -368,7 +300,17 @@ void B_Tree::createTree()
 	_root._numOfCurrentStoredObjects = 0;
 }
 
-void B_Tree::search(Node &root, BTProcessable &val, Node &dst_node, uint16_t &indexWhereValueFound)
+bool B_Tree::searchKey(BTProcessable &val)
+{
+	Node findNode(_initPtr, maxNumOfObjectsInNode, 0);
+
+	uint16_t index = 0;
+	searchImpl(_root, val, findNode, index);
+
+	return index != 0;
+}
+
+void B_Tree::searchImpl(Node &root, BTProcessable &val, Node &dst_node, uint16_t &indexWhereValueFound)
 {
 	uint16_t i = 1;
 
@@ -392,7 +334,7 @@ void B_Tree::search(Node &root, BTProcessable &val, Node &dst_node, uint16_t &in
 	{
 		Node newRoot(_initPtr, maxNumOfObjectsInNode, root._levelMarker - 1);
 		getNode(root.childrenNodesIds[i - 1], newRoot);
-		search(newRoot, val, dst_node, indexWhereValueFound);
+		searchImpl(newRoot, val, dst_node, indexWhereValueFound);
 	}
 }
 
@@ -495,7 +437,12 @@ void B_Tree::insertKey(BTProcessable &val)
 	insertIntoNonFull(_root, val);
 }
 
-void B_Tree::deleteKey(Node &root, BTProcessable &val)
+void B_Tree::deleteKey(BTProcessable &val)
+{
+	deleteKeyImpl(_root, val);
+}
+
+void B_Tree::deleteKeyImpl(Node &root, BTProcessable &val)
 {
 	uint16_t foundIndex = 0;
 
@@ -537,13 +484,12 @@ void B_Tree::deleteKey(Node &root, BTProcessable &val)
 
 				BTProcessable *valToMove = (*leftNeighbourNode.nodesValPtrs[leftNeighbourNode._numOfCurrentStoredObjects - 1]).createNew();
 				*valToMove = *leftNeighbourNode.nodesValPtrs[leftNeighbourNode._numOfCurrentStoredObjects - 1];
-				// BTProcessable valToMove2 = *leftNeighbourNode.nodesValPtrs[leftNeighbourNode._numOfCurrentStoredObjects - 1];
 				root.nodesValPtrs[foundIndex].reset(valToMove); // copying - we need instance further
 
 				saveNode(root);
 
 				getNode(root.childrenNodesIds[foundIndex], leftNeighbourNode);
-				deleteKey(leftNeighbourNode, *valToMove);
+				deleteKeyImpl(leftNeighbourNode, *valToMove);
 			}
 			else if (rightNeighbourNode._numOfCurrentStoredObjects >= t) // b
 			{
@@ -552,14 +498,13 @@ void B_Tree::deleteKey(Node &root, BTProcessable &val)
 
 				BTProcessable *valToMove = (*rightNeighbourNode.nodesValPtrs[0]).createNew();
 				*valToMove = *rightNeighbourNode.nodesValPtrs[0];
-				// BTProcessable valToMove2 = *rightNeighbourNode.nodesValPtrs[0];
 
 				root.nodesValPtrs[foundIndex].reset(valToMove); // copying - we need instance further
 
 				saveNode(root);
 
 				getNode(root.childrenNodesIds[foundIndex + 1], rightNeighbourNode);
-				deleteKey(rightNeighbourNode, *valToMove);
+				deleteKeyImpl(rightNeighbourNode, *valToMove);
 			}
 			else // c
 			{
@@ -598,7 +543,7 @@ void B_Tree::deleteKey(Node &root, BTProcessable &val)
 
 				freeNode(rightNeighbourNode);
 
-				deleteKey(leftNeighbourNode, val);
+				deleteKeyImpl(leftNeighbourNode, val);
 			}
 		}
 	}
@@ -681,7 +626,7 @@ void B_Tree::deleteKey(Node &root, BTProcessable &val)
 				saveNode(neigbourOfMayBeContain);
 				saveNode(mayBeContain);
 
-				deleteKey(mayBeContain, val);
+				deleteKeyImpl(mayBeContain, val);
 			}
 			else // b
 			{
@@ -750,20 +695,20 @@ void B_Tree::deleteKey(Node &root, BTProcessable &val)
 					saveNode(mayBeContain);
 					freeNode(neigbourOfMayBeContain);
 
-					deleteKey(mayBeContain, val);
+					deleteKeyImpl(mayBeContain, val);
 				}
 				else
 				{
 					saveNode(neigbourOfMayBeContain);
 					freeNode(mayBeContain);
 
-					deleteKey(neigbourOfMayBeContain, val);
+					deleteKeyImpl(neigbourOfMayBeContain, val);
 				}
 			}
 		}
 		else // mayBeContain has t objects
 		{
-			deleteKey(mayBeContain, val);
+			deleteKeyImpl(mayBeContain, val);
 		}
 	}
 }

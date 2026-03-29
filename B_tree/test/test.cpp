@@ -173,13 +173,8 @@ TEST(BtreeTests, TestSomeValues)
     for (auto val : vals)
     {
         uint64_type temp{val};
-        Node findNode(&initobj, btr.maxNumOfObjectsInNode, 0);
 
-        uint16_t index = 0;
-        btr.search(btr._root, temp, findNode, index);
-
-        ASSERT_NE(index, 0);
-        ASSERT_EQ(*findNode.nodesValPtrs[index - 1], temp);
+        ASSERT_TRUE(btr.searchKey(temp));
     }
 }
 
@@ -204,13 +199,8 @@ TEST(BtreeTests, TestRandomValues)
     for (auto val : vals)
     {
         uint64_type temp{val};
-        Node findNode(&initobj, btr.maxNumOfObjectsInNode, 0);
 
-        uint16_t index = 0;
-        btr.search(btr._root, temp, findNode, index);
-
-        ASSERT_NE(index, 0);
-        ASSERT_EQ(*findNode.nodesValPtrs[index - 1], temp);
+        ASSERT_TRUE(btr.searchKey(temp));
     }
 }
 
@@ -235,13 +225,8 @@ TEST(BtreeTests, TestMoreValues)
     for (auto i : sh)
     {
         uint64_type temp{i};
-        Node findNode(&initobj, btr.maxNumOfObjectsInNode, 0);
 
-        uint16_t index = 0;
-        btr.search(btr._root, temp, findNode, index);
-
-        ASSERT_NE(index, 0);
-        ASSERT_EQ(*findNode.nodesValPtrs[index - 1], temp);
+        ASSERT_TRUE(btr.searchKey(temp));
     }
 }
 
@@ -259,15 +244,11 @@ TEST(BtreeTests, TestDeletionOfSomeValues)
 
     for (auto val : vals)
     {
-        btr.deleteKey(btr._root, val);
+        btr.deleteKey(val);
 
-        uint64_type searchVal = val;
-        Node findNode(&initobj, btr.maxNumOfObjectsInNode, 0);
+        uint64_type temp{val};
 
-        uint16_t index = 0;
-        btr.search(btr._root, searchVal, findNode, index);
-
-        ASSERT_EQ(index, 0);
+        ASSERT_FALSE(btr.searchKey(temp));
     }
 }
 
@@ -292,14 +273,9 @@ TEST(BtreeTests, TestDeletionOfRandomValues)
     for (auto val : vals)
     {
         uint64_type temp{val};
-        btr.deleteKey(btr._root, temp);
+        btr.deleteKey(temp);
 
-        Node findNode(&initobj, btr.maxNumOfObjectsInNode, 0);
-
-        uint16_t index = 0;
-        btr.search(btr._root, temp, findNode, index);
-
-        ASSERT_EQ(index, 0);
+        ASSERT_FALSE(btr.searchKey(temp));
     }
 }
 
@@ -325,14 +301,9 @@ TEST(BtreeTests, TestDeletionOfMoreValues)
     {
         uint64_type temp{val};
 
-        btr.deleteKey(btr._root, temp);
+        btr.deleteKey(temp);
 
-        Node findNode(&initobj, btr.maxNumOfObjectsInNode, 0);
-
-        uint16_t index = 0;
-        btr.search(btr._root, temp, findNode, index);
-
-        ASSERT_EQ(index, 0);
+        ASSERT_FALSE(btr.searchKey(temp));
     }
 }
 
