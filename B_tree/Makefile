@@ -43,6 +43,7 @@ $(BUILD)/benchmark: $(OBJECTS)/benchmark.o $(BUILD)/libbtree.so | $(OBJECTS)
 complete: $(BUILD)/main $(BUILD)/test $(BUILD)/benchmark
 	@rm -rf $(OBJECTS)
 	cp btree.h $(BUILD)
+	cp btprocessable.h $(BUILD)
 
 .DELETE_ON_ERROR:
 
