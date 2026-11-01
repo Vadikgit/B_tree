@@ -20,4 +20,4 @@ target_link_libraries(main btree)
 target_link_libraries(test btree gtest gmock pthread)
 target_link_libraries(benchmarks btree benchmark pthread)
 
-file(COPY ${CMAKE_SOURCE_DIR}/btree.h ${CMAKE_SOURCE_DIR}/btprocessable.h DESTINATION ${PROJECT_BINARY_DIR}/include)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/btree.h ${CMAKE_CURRENT_SOURCE_DIR}/btprocessable.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include)
