@@ -116,7 +116,7 @@ void createRandomShuffle(uint64_t minVal, uint64_t maxVal, size_t numberOfElemen
     dst.resize(numberOfElements);
 }
 
-TEST(BtreeTests, DISABLED_TestNodesSavingGetting)
+TEST(BtreeTests, TestNodesSavingGetting)
 {
     size_t pageSizeInBytes = 64;
 
@@ -154,7 +154,7 @@ TEST(BtreeTests, DISABLED_TestNodesSavingGetting)
         EXPECT_EQ(nd1.childrenNodesIds[i], nd2.childrenNodesIds[i]);
 }
 
-TEST(BtreeTests, DISABLED_TestSomeValues)
+TEST(BtreeTests, TestSomeValues)
 {
     size_t pageSizeInBytes = 64;
 
@@ -178,7 +178,7 @@ TEST(BtreeTests, DISABLED_TestSomeValues)
     }
 }
 
-TEST(BtreeTests, DISABLED_TestRandomValues)
+TEST(BtreeTests, TestRandomValues)
 {
     srand(std::time(NULL));
     std::vector<uint64_t> vals;
@@ -230,7 +230,7 @@ TEST(BtreeTests, TestMoreValues)
     }
 }
 
-TEST(BtreeTests, DISABLED_TestDeletionOfSomeValues)
+TEST(BtreeTests, TestDeletionOfSomeValues)
 {
     size_t pageSizeInBytes = 64;
     uint64_type initobj{0};
@@ -252,7 +252,7 @@ TEST(BtreeTests, DISABLED_TestDeletionOfSomeValues)
     }
 }
 
-TEST(BtreeTests, DISABLED_TestDeletionOfRandomValues)
+TEST(BtreeTests, TestDeletionOfRandomValues)
 {
     srand(std::time(NULL));
     std::vector<uint64_t> vals;
@@ -279,7 +279,7 @@ TEST(BtreeTests, DISABLED_TestDeletionOfRandomValues)
     }
 }
 
-TEST(BtreeTests, DISABLED_TestDeletionOfMoreValues)
+TEST(BtreeTests, TestDeletionOfMoreValues)
 {
     srand(std::time(NULL));
     std::vector<uint64_t> vals;
